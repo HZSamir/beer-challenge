@@ -8,17 +8,32 @@ import {
   Modal,
   Fieldset,
   TextInput,
+  Menu,
+  Button,
 } from "@mantine/core";
+import ReactPaginate from "react-paginate";
 import {
   IconAdjustments,
-  IconArrowsTransferDown,
-  IconArrowsTransferUp,
+  IconSortDescending2,
+  IconSortAscending2,
 } from "@tabler/icons-react";
 import Link from "next/link";
 
+const compareDates = (d1, d2, sortOrder) => {
+  let date1 = new Date("01/" + d1).getTime();
+  let date2 = new Date("01/" + d2).getTime();
+
+  if (date1 < date2) {
+    return sortOrder === "asc" ? 1 : -1;
+  } else if (date1 > date2) {
+    return sortOrder === "asc" ? -1 : 1;
+  } else {
+    return 0;
+  }
+};
+
 const defaultTableData = {
-  caption: "Beer Info",
-  head: ["Name", "Tagline", "First Brewed", "abv", "Link"],
+  head: ["Name", "Tagline", "First Brewed", "ABV", "Link"],
   body: [],
 };
 
@@ -54,12 +69,14 @@ const BeerModal = ({ opened, onClose, beerId }) => {
       padding="xl"
     >
       <Fieldset legend="General information">
-        <TextInput label="Name" value={data?.name} />
-        <TextInput label="Tagline" value={data?.tagline} />
+        <TextInput label="Name" defaultValue={data?.name || ""} />
+        <TextInput label="Tagline" defaultValue={data?.tagline || ""} />
       </Fieldset>
     </Modal>
   );
 };
+
+const ITEMS_PER_PAGE = 10;
 
 export default function Table() {
   const [data, setData] = useState([]);
@@ -67,6 +84,7 @@ export default function Table() {
   const [opened, setOpened] = useState(false);
   const [beerId, setBeerId] = useState(null);
 
+  // Sorting
   const [sorting, setSorting] = useState({
     name: "asc",
     tagline: "asc",
@@ -74,14 +92,51 @@ export default function Table() {
     abv: "asc",
   });
 
-  const handleChangeSorting = (value) => {
-    setSorting((currVal) => ({
-      ...currVal,
-      [value]: currVal[value] === "asc" ? "desc" : "asc",
-    }));
+  // Pagination
+  const [itemOffset, setItemOffset] = useState(0);
+  const endOffset = itemOffset + ITEMS_PER_PAGE;
+  const [currentItems, setCurrentItems] = useState([]);
+  const pageCount = Math.ceil(data.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentItems(
+      data
+        .sort((a, b) => {
+          const column = Object.keys(sorting).find(
+            (key) => sorting[key] !== ""
+          );
+          if (column === "first_brewed") {
+            return compareDates(a[column], b[column], sorting?.first_brewed);
+          }
+
+          if (column === "abv") {
+            return sorting.abv === "asc"
+              ? a[column] - b[column]
+              : b[column] - a[column];
+          }
+
+          return sorting[column] === "asc"
+            ? a[column].localeCompare(b[column])
+            : b[column].localeCompare(a[column]);
+        })
+        .slice(itemOffset, endOffset)
+    );
+  }, [data, sorting, itemOffset, endOffset]);
+
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * ITEMS_PER_PAGE) % data.length;
+    console.log(
+      `User requested page number ${event.selected}, which is offset ${newOffset}`
+    );
+    setItemOffset(newOffset);
   };
 
-  console.log("current value", sorting.name);
+  const handleChangeSorting = (column) => {
+    setSorting((currVal) => ({
+      ...Object.fromEntries(Object.keys(currVal).map((key) => [key, ""])),
+      [column]: currVal[column] === "asc" ? "desc" : "asc",
+    }));
+  };
   const onClose = () => setOpened(false);
 
   useEffect(() => {
@@ -108,46 +163,97 @@ export default function Table() {
         <div
           key="name"
           className="flex flex-row"
-          onClick={() => {
-            console.log("changing name sort");
-            handleChangeSorting("name");
-          }}
+          onClick={() => handleChangeSorting("name")}
         >
-          Name{" "}
+          Name
           {sorting.name === "asc" ? (
-            <IconArrowsTransferUp
-              style={{ width: "14px", height: "14px" }}
+            <IconSortAscending2
+              style={{ width: "22px", height: "22px" }}
               stroke={1.5}
             />
           ) : (
-            <IconArrowsTransferDown
-              style={{ width: "14px", height: "14px" }}
+            <IconSortDescending2
+              style={{ width: "22px", height: "22px" }}
               stroke={1.5}
             />
           )}
         </div>,
-        "Tagline",
-        "First Brewed",
-        "abv",
+        <div
+          key="Tagline"
+          className="flex flex-row"
+          onClick={() => handleChangeSorting("tagline")}
+        >
+          Tagline
+          {sorting.tagline === "asc" ? (
+            <IconSortAscending2
+              style={{ width: "22px", height: "22px" }}
+              stroke={1.5}
+            />
+          ) : (
+            <IconSortDescending2
+              style={{ width: "22px", height: "22px" }}
+              stroke={1.5}
+            />
+          )}
+        </div>,
+        <div
+          key="first_brewed"
+          className="flex flex-row mr-1"
+          onClick={() => handleChangeSorting("first_brewed")}
+        >
+          First Brewed
+          {sorting.first_brewed === "asc" ? (
+            <IconSortAscending2
+              style={{ width: "22px", height: "22px" }}
+              stroke={1.5}
+            />
+          ) : (
+            <IconSortDescending2
+              style={{ width: "22px", height: "22px" }}
+              stroke={1.5}
+            />
+          )}
+        </div>,
+        <div
+          key="abv"
+          className="flex flex-row"
+          onClick={() => handleChangeSorting("abv")}
+        >
+          ABV
+          {sorting.abv === "asc" ? (
+            <IconSortAscending2
+              style={{ width: "22px", height: "22px" }}
+              stroke={1.5}
+            />
+          ) : (
+            <IconSortDescending2
+              style={{ width: "22px", height: "22px" }}
+              stroke={1.5}
+            />
+          )}
+        </div>,
         "Link",
       ],
-      body: data
+      body: currentItems
         .filter((beer) =>
           beer.name.toLowerCase().includes(search.toLowerCase())
         )
-        .sort((a, b) =>
-          sorting.name === "asc"
-            ? a.name.localeCompare(b.name)
-            : !a.name.localeCompare(b.name)
-        )
         .map((beer) => [
-          beer.name,
-          beer.tagline,
-          beer.first_brewed,
-          beer.abv,
+          <div key={beer.id} className="oneLine">
+            {beer.name}
+          </div>,
+          <div key={beer.id} className="oneLine">
+            {beer.tagline}
+          </div>,
+          <div key={beer.id} className="oneLine">
+            {beer.first_brewed}
+          </div>,
+          <div key={beer.id} className="oneLine">
+            {beer.abv}
+          </div>,
 
           <>
-            <Tooltip label="Open in dialog">
+            {/* <Tooltip label="Open in dialog">
               <ActionIcon
                 variant="filled"
                 color="yellow"
@@ -155,7 +261,6 @@ export default function Table() {
                 radius="xl"
                 aria-label="Settings"
                 onClick={() => {
-                  console.log("beer id", beer.id);
                   setBeerId(beer.id);
                   setOpened(true);
                 }}
@@ -166,7 +271,6 @@ export default function Table() {
                 />
               </ActionIcon>
             </Tooltip>
-
             <Tooltip label="Open in page">
               <Link key={beer.id} href={`/beer/${beer.id}`}>
                 <ActionIcon
@@ -182,11 +286,38 @@ export default function Table() {
                   />
                 </ActionIcon>
               </Link>
-            </Tooltip>
+            </Tooltip> */}
+            <Menu>
+              <Menu.Target>
+                <Button>Toggle menu</Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Link key={beer.id} href={`/beer/${beer.id}`}>
+                  <Menu.Item>Open in Page</Menu.Item>
+                </Link>
+                <Menu.Item
+                  onClick={() => {
+                    setBeerId(beer.id);
+                    setOpened(true);
+                  }}
+                >
+                  Open in Dialog
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </>,
         ]),
     };
-  }, [data, search, sorting]);
+  }, [
+    currentItems,
+    data,
+    search,
+    sorting.first_brewed,
+    sorting.name,
+    sorting.tagline,
+    sorting.abv,
+  ]);
 
   return (
     <div>
@@ -201,10 +332,17 @@ export default function Table() {
         highlightOnHover
         withTableBorder
         withColumnBorders
-        stickyHeader
-        stickyHeaderOffset={60}
+        withRowBorders
       />
-
+      <ReactPaginate
+        breakLabel="..."
+        onPageChange={handlePageClick}
+        pageRangeDisplayed={5}
+        pageCount={pageCount}
+        renderOnZeroPageCount={null}
+        previousLabel="< previous"
+        nextLabel="next >"
+      />
       <BeerModal opened={opened} onClose={onClose} beerId={beerId} />
     </div>
   );
