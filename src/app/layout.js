@@ -1,10 +1,12 @@
-import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import "./globals.css";
 import "@mantine/core/styles.css";
 
-import { Inter } from "next/font/google";
-import "./globals.css";
+import { MantineProvider, ColorSchemeScript } from "@mantine/core";
 
-const inter = Inter({ subsets: ["latin"] });
+export const metadata = {
+  title: "My app",
+  description: "Code challenge",
+};
 
 export default function RootLayout({ children }) {
   return (
@@ -12,14 +14,8 @@ export default function RootLayout({ children }) {
       <head>
         <ColorSchemeScript />
       </head>
-      <body className={inter.className}>
-        <MantineProvider
-          withGlobalStyles
-          withNormalizeCSS
-          cssVariablesSelector="html"
-        >
-          {children}
-        </MantineProvider>
+      <body className="py-4">
+        <MantineProvider>{children}</MantineProvider>
       </body>
     </html>
   );

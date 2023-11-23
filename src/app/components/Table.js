@@ -162,7 +162,7 @@ export default function Table() {
       head: [
         <div
           key="name"
-          className="flex flex-row"
+          className="flex flex-row mr-1 items-center justify-between	"
           onClick={() => handleChangeSorting("name")}
         >
           Name
@@ -180,7 +180,7 @@ export default function Table() {
         </div>,
         <div
           key="Tagline"
-          className="flex flex-row"
+          className="flex flex-row mr-1 items-center justify-between	"
           onClick={() => handleChangeSorting("tagline")}
         >
           Tagline
@@ -198,7 +198,7 @@ export default function Table() {
         </div>,
         <div
           key="first_brewed"
-          className="flex flex-row mr-1"
+          className="flex flex-row mr-1 items-center justify-between	whitespace-nowrap		"
           onClick={() => handleChangeSorting("first_brewed")}
         >
           First Brewed
@@ -216,7 +216,7 @@ export default function Table() {
         </div>,
         <div
           key="abv"
-          className="flex flex-row"
+          className="flex flex-row mr-1 items-center justify-between	"
           onClick={() => handleChangeSorting("abv")}
         >
           ABV
@@ -320,7 +320,7 @@ export default function Table() {
   ]);
 
   return (
-    <div>
+    <div className="w-full">
       <input
         value={search}
         onChange={() => setSearch(event.target.value)}
@@ -340,8 +340,14 @@ export default function Table() {
         pageRangeDisplayed={5}
         pageCount={pageCount}
         renderOnZeroPageCount={null}
-        previousLabel="< previous"
-        nextLabel="next >"
+        previousLabel="<"
+        nextLabel=">"
+        containerClassName="flex justify-center gap-1 text-xs font-medium mt-4"
+        pageClassName="block h-8 w-8 rounded border border-gray-100 bg-white text-center leading-8 text-gray-900"
+        previousClassName="block h-8 w-8 rounded border border-gray-100 bg-white text-center leading-8 text-gray-900"
+        nextClassName="block h-8 w-8 rounded border border-gray-100 bg-white text-center leading-8 text-gray-900"
+        activeClassName="block h-8 w-8 rounded !border-blue-600 !bg-blue-600 text-center leading-8 !text-white"
+        pageLinkClassName="w-full h-full block"
       />
       <BeerModal opened={opened} onClose={onClose} beerId={beerId} />
     </div>
